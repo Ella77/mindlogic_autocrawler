@@ -13,8 +13,9 @@ Google, Naver multiprocess image crawler (High Quality & Speed & Customizable)
 
 4. **Run "main.py"**
 
-5. Files will be downloaded to 'download' directory.
+5. Files will be downloaded to specific directory. 'download_path'in train.py
 
+chrome, chromedriver version compatibility와 version별 error 
 
 # Arguments
 usage:
@@ -63,9 +64,22 @@ sudo apt-get install screen <- This will allow you to close SSH terminal while r
 
 screen -S s1
 
-Xvfb :99 -ac & DISPLAY=:99 python3 main.py
+Xvfb :99 -ac & DISPLAY=:99 python3 main.py -threads 4 --google true --naver true --full true --face true
 ```
+
+keywords.txt( 검색어 목록)과 output사진들이 다운로드될 download_path수정 필요
 
 # Customize
 
 You can make your own crawler by changing collect_links.py
+
+
+#crop face 
+
+전체 폴더명 순서대로 번호 붙이기
+ex)download/AOA설현 -> 1
+new=0;for i in *;do ext="${i#*.}";mv "$i" "$new";((new++));done
+
+폴더를 돌면서 얼굴 잘라진 crop 폴더와 ,face detect되지 않는 원본 사진은 reject폴더로
+new=0;for new in {0..103};do autocrop -i  ./download/"$new"  -o crop/"$new"  -r reject/"$new"  -w 512 -H 512 --facePercent 90;((new++));done
+
