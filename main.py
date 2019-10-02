@@ -1,3 +1,4 @@
+# coding: utf-8
 """
 Copyright 2018 YoongiKim
 
@@ -22,7 +23,8 @@ from multiprocessing import Pool
 import argparse
 from collect_links import CollectLinks
 import imghdr
-
+import io
+from romanizer import Romanizer
 
 class Sites:
     GOOGLE = 1
@@ -50,7 +52,7 @@ class Sites:
 
 
 class AutoCrawler:
-    def __init__(self, skip_already_exist=True, n_threads=4, do_google=True, do_naver=True, download_path='download',
+    def __init__(self, skip_already_exist=True, n_threads=4, do_google=True, do_naver=True, download_path='girldownload',
                  full_resolution=False, face=False):
         """
         :param skip_already_exist: Skips keyword already downloaded before. This is needed when re-downloading.
@@ -121,18 +123,18 @@ class AutoCrawler:
             os.makedirs(path)
 
     @staticmethod
-    def get_keywords(keywords_file='keywords.txt'):
+    def get_keywords(keywords_file='newkeygirl.txt'):
         # read search keywords from file
-        with open(keywords_file, 'r', encoding='utf-8-sig') as f:
+        with io.open(keywords_file, 'r', encoding='utf-8-sig') as f:
             text = f.read()
             lines = text.split('\n')
             lines = filter(lambda x: x != '' and x is not None, lines)
             keywords = sorted(set(lines))
 
-        print('{} keywords found: {}'.format(len(keywords), keywords))
+        #print('{} keywords found: {}'.format(len(keywords), keywords)
 
         # re-save sorted keywords
-        with open(keywords_file, 'w+', encoding='utf-8') as f:
+        with open('newkeygirl.txt', 'w+', encoding='utf-8') as f:
             for keyword in keywords:
                 f.write('{}\n'.format(keyword))
 
@@ -222,7 +224,9 @@ class AutoCrawler:
         tasks = []
 
         for keyword in keywords:
-            dir_name = '{}/{}'.format(self.download_path, keyword)
+            roman = Romanizer(keyword)
+            romankeyword = roman.romanize()
+            dir_name = '{}/{}'.format(self.download_path, romankeyword)
             if os.path.exists(os.path.join(os.getcwd(), dir_name)) and self.skip:
                 print('Skipping already existing directory {}'.format(dir_name))
                 continue
