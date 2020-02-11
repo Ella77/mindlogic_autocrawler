@@ -1,4 +1,3 @@
-# coding: utf-8
 """
 Copyright 2018 YoongiKim
 
@@ -23,8 +22,8 @@ from multiprocessing import Pool
 import argparse
 from collect_links import CollectLinks
 import imghdr
-import io
-from romanizer import Romanizer
+import base64
+
 
 class Sites:
     GOOGLE = 1
@@ -52,7 +51,7 @@ class Sites:
 
 
 class AutoCrawler:
-    def __init__(self, skip_already_exist=True, n_threads=4, do_google=True, do_naver=True, download_path='girldownload',
+    def __init__(self, skip_already_exist=True, n_threads=4, do_google=True, do_naver=True, download_path='download',
                  full_resolution=False, face=False):
         """
         :param skip_already_exist: Skips keyword already downloaded before. This is needed when re-downloading.
@@ -123,30 +122,39 @@ class AutoCrawler:
             os.makedirs(path)
 
     @staticmethod
-    def get_keywords(keywords_file='newkeygirl.txt'):
+    def get_keywords(keywords_file='keywords.txt'):
         # read search keywords from file
-        with io.open(keywords_file, 'r', encoding='utf-8-sig') as f:
+        with open(keywords_file, 'r', encoding='utf-8-sig') as f:
             text = f.read()
             lines = text.split('\n')
             lines = filter(lambda x: x != '' and x is not None, lines)
             keywords = sorted(set(lines))
 
-        #print('{} keywords found: {}'.format(len(keywords), keywords)
+        print('{} keywords found: {}'.format(len(keywords), keywords))
 
         # re-save sorted keywords
-        with open('newkeygirl.txt', 'w+', encoding='utf-8') as f:
+        with open(keywords_file, 'w+', encoding='utf-8') as f:
             for keyword in keywords:
                 f.write('{}\n'.format(keyword))
 
         return keywords
 
     @staticmethod
-    def save_object_to_file(object, file_path):
+    def save_object_to_file(object, file_path, is_base64=False):
         try:
             with open('{}'.format(file_path), 'wb') as file:
-                shutil.copyfileobj(object.raw, file)
+                if is_base64:
+                    file.write(object)
+                else:
+                    shutil.copyfileobj(object.raw, file)
         except Exception as e:
             print('Save failed - {}'.format(e))
+
+    @staticmethod
+    def base64_to_object(src):
+        header, encoded = str(src).split(',', 1)
+        data = base64.decodebytes(bytes(encoded, encoding='utf-8'))
+        return data
 
     def download_images(self, keyword, links, site_name):
         self.make_dir('{}/{}'.format(self.download_path, keyword))
@@ -155,12 +163,23 @@ class AutoCrawler:
         for index, link in enumerate(links):
             try:
                 print('Downloading {} from {}: {} / {}'.format(keyword, site_name, index + 1, total))
-                response = requests.get(link, stream=True)
-                ext = self.get_extension_from_link(link)
+
+                if str(link).startswith('data:image/jpeg;base64'):
+                    response = self.base64_to_object(link)
+                    ext = 'jpg'
+                    is_base64 = True
+                elif str(link).startswith('data:image/png;base64'):
+                    response = self.base64_to_object(link)
+                    ext = 'png'
+                    is_base64 = True
+                else:
+                    response = requests.get(link, stream=True)
+                    ext = self.get_extension_from_link(link)
+                    is_base64 = False
 
                 no_ext_path = '{}/{}/{}_{}'.format(self.download_path, keyword, site_name, str(index).zfill(4))
                 path = no_ext_path + '.' + ext
-                self.save_object_to_file(response, path)
+                self.save_object_to_file(response, path, is_base64=is_base64)
 
                 del response
 
@@ -224,9 +243,7 @@ class AutoCrawler:
         tasks = []
 
         for keyword in keywords:
-            roman = Romanizer(keyword)
-            romankeyword = roman.romanize()
-            dir_name = '{}/{}'.format(self.download_path, romankeyword)
+            dir_name = '{}/{}'.format(self.download_path, keyword)
             if os.path.exists(os.path.join(os.getcwd(), dir_name)) and self.skip:
                 print('Skipping already existing directory {}'.format(dir_name))
                 continue
@@ -274,12 +291,12 @@ class AutoCrawler:
                 dict_too_small[dir] = n_files
 
         if len(dict_too_small) >= 1:
+            print('Data imbalance detected.')
+            print('Below keywords have smaller than 50% of average file count.')
+            print('I recommend you to remove these directories and re-download for that keyword.')
+            print('_________________________________')
+            print('Too small file count directories:')
             for dir, n_files in dict_too_small.items():
-                print('Data imbalance detected.')
-                print('Below keywords have smaller than 50% of average file count.')
-                print('I recommend you to remove these directories and re-download for that keyword.')
-                print('_________________________________')
-                print('Too small file count directories:')
                 print('dir: {}, file_count: {}'.format(dir, n_files))
 
             print("Remove directories above? (y/n)")
