@@ -52,7 +52,7 @@ class Sites:
 
 class AutoCrawler:
     def __init__(self, skip_already_exist=True, n_threads=4, do_google=True, do_naver=True, download_path='download',
-                 full_resolution=False, face=False):
+                 full_resolution=False, face=False,keyword='keywords.txt'):
         """
         :param skip_already_exist: Skips keyword already downloaded before. This is needed when re-downloading.
         :param n_threads: Number of threads to download.
@@ -70,6 +70,7 @@ class AutoCrawler:
         self.download_path = download_path
         self.full_resolution = full_resolution
         self.face = face
+        self.keyword = keyword
 
         os.makedirs('./{}'.format(self.download_path), exist_ok=True)
 
@@ -121,9 +122,10 @@ class AutoCrawler:
         if not os.path.exists(path):
             os.makedirs(path)
 
-    @staticmethod
-    def get_keywords(keywords_file='keywords.txt'):
+
+    def get_keywords(self,keywords_file='keywords.txt'):
         # read search keywords from file
+        
         with open(keywords_file, 'r', encoding='utf-8-sig') as f:
             text = f.read()
             lines = text.split('\n')
@@ -238,7 +240,7 @@ class AutoCrawler:
         self.download_from_site(keyword=args[0], site_code=args[1])
 
     def do_crawling(self):
-        keywords = self.get_keywords()
+        keywords = self.get_keywords(self.keyword)
 
         tasks = []
 
@@ -323,6 +325,8 @@ if __name__ == '__main__':
     parser.add_argument('--naver', type=str, default='true', help='Download from naver.com (boolean)')
     parser.add_argument('--full', type=str, default='false', help='Download full resolution image instead of thumbnails (slow)')
     parser.add_argument('--face', type=str, default='false', help='Face search mode')
+    parser.add_argument('--keyword', type=str, default='keywords.txt', help='keyword file text')
+
     args = parser.parse_args()
 
     _skip = False if str(args.skip).lower() == 'false' else True
@@ -331,8 +335,9 @@ if __name__ == '__main__':
     _naver = False if str(args.naver).lower() == 'false' else True
     _full = False if str(args.full).lower() == 'false' else True
     _face = False if str(args.face).lower() == 'false' else True
+    _keyword = str(args.keyword)
 
-    print('Options - skip:{}, threads:{}, google:{}, naver:{}, full_resolution:{}, face:{}'.format(_skip, _threads, _google, _naver, _full, _face))
+    print('Options - skip:{}, threads:{}, google:{}, naver:{}, full_resolution:{}, face:{}, keyword_file:{}'.format(_skip, _threads, _google, _naver, _full, _face,_keyword))
 
-    crawler = AutoCrawler(skip_already_exist=_skip, n_threads=_threads, do_google=_google, do_naver=_naver, full_resolution=_full, face=_face)
+    crawler = AutoCrawler(skip_already_exist=_skip, n_threads=_threads, do_google=_google, do_naver=_naver, full_resolution=_full, face=_face,keyword=_keyword)
     crawler.do_crawling()

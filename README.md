@@ -64,10 +64,11 @@ sudo apt-get install screen <- This will allow you to close SSH terminal while r
 
 screen -S s1
 
-Xvfb :99 -ac & DISPLAY=:99 python3 main.py -threads 4 --google true --naver true --full true --face true
+Xvfb :99 -ac & DISPLAY=:99 python3 main.py --threads 4 --google true --naver true --full true --face true --keyword file.txt
 ```
 
-keywords.txt( 검색어 목록)과 output사진들이 다운로드될 download_path수정 필요
+검색어 목록은 python3 main.py --keyword file.txt 로 입력한다.
+main.py에 output사진들이 다운로드될 download_path는 default(download폴더) 수정 필요
 
 # Customize
 
