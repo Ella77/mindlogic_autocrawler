@@ -86,3 +86,15 @@ new=0;for new in {0..103};do autocrop -i  ./download/"$new"  -o crop/"$new"  -r 
 디렉토리 별로 분리된 파일들을 디렉토리명을 파일명으로 넣어 합치기
 ex) 0/naver0001.jpg -> 0_naver0001.jpg
 for new in {0..99};do for i in /hdd/celeb-images-crawled/face90/girl_crop/"$new"/*;do cp ”$i" ~/girl/"$new"_"$(basename "$i")";done;done
+
+
+#구글 이미지 크롤링 안되는 오류 해결
+
+#chrome download
+
+sudo dpkg -i google-chrome-stable_current_amd64.deb (디렉토리 내)
+dependency 오류시 sudo apt install -f 
+
+#chromedriver
+no permisson -> chmod +x chromedriver/chromedriver_linux
+DevActivePorts error -> 코드내 headless 등 chrome option으로 해결
