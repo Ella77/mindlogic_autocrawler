@@ -74,27 +74,39 @@ keywords.txt( 검색어 목록)과 output사진들이 다운로드될 download_p
 You can make your own crawler by changing collect_links.py
 
 
-#crop face 
+# crop face 
 
 전체 폴더명 순서대로 번호 붙이기
 ex)download/AOA설현 -> 1
+```
 new=0;for i in *;do ext="${i#*.}";mv "$i" "$new";((new++));done
-
+```
 폴더를 돌면서 얼굴 잘라진 crop 폴더와 ,face detect되지 않는 원본 사진은 reject폴더로
+```
 new=0;for new in {0..103};do autocrop -i  ./download/"$new"  -o crop/"$new"  -r reject/"$new"  -w 512 -H 512 --facePercent 90;((new++));done
-
+```
 디렉토리 별로 분리된 파일들을 디렉토리명을 파일명으로 넣어 합치기
 ex) 0/naver0001.jpg -> 0_naver0001.jpg
+```
 for new in {0..99};do for i in /hdd/celeb-images-crawled/face90/girl_crop/"$new"/*;do cp ”$i" ~/girl/"$new"_"$(basename "$i")";done;done
+```
 
+# 구글 이미지 크롤링 안되는 오류 해결
 
-#구글 이미지 크롤링 안되는 오류 해결
+# chrome download
 
-#chrome download
-
-sudo dpkg -i google-chrome-stable_current_amd64.deb (디렉토리 내)
+```sudo dpkg -i google-chrome-stable_current_amd64.deb```
 dependency 오류시 sudo apt install -f 
 
-#chromedriver
-no permisson -> chmod +x chromedriver/chromedriver_linux
-DevActivePorts error -> 코드내 headless 등 chrome option으로 해결
+when update needed, install chrome browser
+```
+$ sudo apt-get install libxss1 libgconf2-4 libappindicator1 libindicator7
+
+$ wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb 
+
+$ sudo dpkg -i google-chrome-stable_current_amd64.deb
+```
+
+# chromedriver
+no permisson -> ```chmod +x chromedriver/chromedriver_linux```
+DevActivePorts error -> 코드내 headless 등 chrome option으로 해결됨
